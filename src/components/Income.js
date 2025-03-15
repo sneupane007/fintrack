@@ -10,13 +10,15 @@ export default function Income() {
     console.log(category);
   };
   return (
-    <div className="p-6 bg-green-400">
+    <div className="m-4 p-4 rounded-lg bg-gray-200">
+      <h1 className="text-xl">Income</h1>
       {/* Amount */}
       <input
         className="m-2 p-2 rounded-lg"
         type="number"
         placeholder="Amount"
         onChange={(e) => setAmount(e.target.value)}
+        required
       />
       {/* Description */}
       <input
@@ -27,19 +29,17 @@ export default function Income() {
       />
       {/* Category Dropdown */}
       <select
-        className="m-2 p-2 rounded-lg"
+        className="m-2 p-2 bg-blue-500 rounded-lg"
         name="myDropdown"
-        id="myDropdown"
+        placeholder="Category"
         onChange={(e) => setCategory(e.target.value)}
+        required
       >
-        <option disabled hidden selected value="">
-          Select a Category
-        </option>
+        <option defaultValue="">Select a Category</option>
         <option value="option1">Option 1</option>
         <option value="option2">Option 2</option>
         <option value="option3">Option 3</option>
       </select>
-      <label>Choose an option:</label>
       <button className="m-2 p-2 bg-teal-500 rounded-lg" onClick={addToDB}>
         Add to finance
       </button>

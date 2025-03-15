@@ -1,62 +1,107 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../config/firebase";
-import {
-  addDoc,
-  getDocs,
-  collection,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
+import EditComponent from "./EditComponent";
+import { deleteDoc, doc } from "firebase/firestore";
+import { getExpenses } from "./Utils";
 
 export default function Dashboard() {
-  // Initialize state to store the list of expenses from the database
-  const [expenseList, setExpenseList] = useState([]);
+  const [expenseList, setExpenseList] = useState([]); // Use state for expenseList
+  const [editingId, setEditingId] = useState(null); // Track which expense is being edited
 
-  const expenseCollection = collection(db, "expense");
-  const getExpenses = async () => {
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      const expenses = await getExpenses();
+      setExpenseList(expenses);
+    };
+    fetchExpenses();
+  }, []); // Fetch expenses on component mount
+
+  // Delete an expense
+  const deleteExpense = async (id) => {
     try {
-      const data = await getDocs(expenseCollection);
-      console.log("Data");
-      const filteredData = data.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setExpenseList(filteredData);
+      await deleteDoc(doc(db, "expense", id));
+      const updatedExpenses = await getExpenses(); // Refresh the list after deletion
+      setExpenseList(updatedExpenses);
     } catch (error) {
-      console.log(error);
+      console.error("Error deleting expense: ", error);
     }
   };
 
-  getExpenses();
-  // Delete the expense from the database
-  const deleteExpense = async (id) => {
-    const expenseDoc = await deleteDoc(doc(db, "expense", id));
+  // Handle edit button click
+  const handleEditButton = (id) => {
+    setEditingId(id); // Set the ID of the expense being edited
+  };
+
+  // Close the edit component
+  const closeEditComponent = async () => {
+    setEditingId(null); // Reset the editing ID
+    const updatedExpenses = await getExpenses(); // Refresh the list after editing
+    setExpenseList(updatedExpenses);
   };
 
   return (
-    <div>
-      <h1 className="p-4 bg-red-500 text-xl">Dashboard</h1>
-      {expenseList.length > 0 ? (
-        expenseList.map((expense) => (
-          <div key={expense.id} className="p-4 border-b">
-            <p>Amount: ${expense.Amount}</p>
-            <p>Description: {expense.description}</p>
-            <p>Date: {String(expense.Date)}</p>
-            <button
-              className="bg-red-500 text-white p-2 rounded-lg"
-              onClick={() => deleteExpense(expense.id)}
-            >
-              Delete Entry
-            </button>
-
-            <button className="bg-blue-500 text-white p-2 rounded-lg">
-              Edit Entry
-            </button>
-          </div>
-        ))
-      ) : (
-        <p>No expenses found.</p>
-      )}
-    </div>
+    <>
+      <h1 className="text-xl">Dashboard</h1>
+      <div
+        className="container my-5"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <table className="w-full text-sm text-left rtl:text-right text-white-500 dark:text-gray-400">
+          <thead>
+            <tr>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {expenseList.length > 0 ? (
+              expenseList.map((expense) => (
+                <tr
+                  key={expense.id}
+                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                >
+                  <td>{expense.amount}</td>
+                  <td>{expense.description}</td>
+                  <td>{expense.category}</td>
+                  <td>{String(expense.date)}</td>
+                  <td className="flex flex-row">
+                    <button
+                      className="bg-red-500 text-white rounded-lg"
+                      onClick={() => deleteExpense(expense.id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white rounded-lg"
+                      onClick={() => handleEditButton(expense.id)}
+                    >
+                      Edit
+                    </button>
+                    {editingId === expense.id && (
+                      <EditComponent
+                        id={expense.id}
+                        initialData={expense}
+                        onClose={closeEditComponent}
+                      />
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6">No expenses found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
