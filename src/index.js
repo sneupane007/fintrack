@@ -1,22 +1,23 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Expenses from "./components/Expenses";
-import Dashboard from "./components/Dashboard";
-import Income from "./components/Income";
+import Expenses from "./components/create/Expenses";
+import Dashboard from "./components/dashboard/Dashboard";
+import Income from "./components/create/Income";
 import App from "./App";
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <div className="flex flex-row bg-gray-500 text-center p-4">
-      {/* <div className="w-1/2 border-x">
-        <Dashboard />
-      </div>
-      <div>
+      <Dashboard />
+      <div className="flex flex-col bg-gray-500 text-center p-4">
         <Expenses />
         <Income />
-      </div> */}
-      <App/>
+      </div>
+    </div>
+    <div className="flex flex-col bg-gray-500 text-center p-4">
+      <div />
+      <App />
     </div>
   </React.StrictMode>
 );

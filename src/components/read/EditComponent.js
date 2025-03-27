@@ -1,18 +1,17 @@
 import React, { useState } from "react";
-import { db } from "../config/firebase";
+import { db } from "../../config/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { currTime } from "./Time";
+import { currTime } from "../util/Time";
 function EditComponent({ id, initialData, onClose }) {
   const [amount, setAmount] = useState(initialData.Amount);
   const [description, setDescription] = useState(initialData.description);
-
+  console.log("Updating expense...", id);
   // Update the expense in Firestore
   const handleUpdate = async () => {
-
     try {
       const expenseDoc = doc(db, "expense", id);
       await updateDoc(expenseDoc, {
-        Amount: amount,
+        amount: amount,
         description: description,
         date: currTime(),
       });
@@ -23,7 +22,7 @@ function EditComponent({ id, initialData, onClose }) {
   };
 
   return (
-    <div className="mt-4 p-4 border-t">
+    <div>
       <h2 className="text-lg font-bold">Edit Expense</h2>
       <input
         type="number"

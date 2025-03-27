@@ -1,16 +1,16 @@
 import React from "react";
-import { db } from "../config/firebase";
+import { db } from "../../config/firebase";
 import { addDoc, collection } from "firebase/firestore";
-import { currTime } from "./Time";
-import { getExpenses } from "./Utils";
+import { currTime } from "../util/Time";
+import { getExpenses } from "../util/Utils";
 
 // handle the submission of expenses
-export default function Expenses() {
+export default function ExpenseEntry() {
   const [amount, setAmount] = React.useState(null);
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [expenseList, setExpenseList] = React.useState([]); // Use state for expenseList
-  
+
   React.useEffect(() => {
     const fetchExpenses = async () => {
       const expenses = await getExpenses();

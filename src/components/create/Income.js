@@ -1,13 +1,37 @@
 import React from "react";
-
+import { db } from "../../config/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { currTime } from "../util/Time";
+import { getIncome } from "../util/Utils";
 export default function Income() {
   const [amount, setAmount] = React.useState(0);
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState(null);
-  const addToDB = () => {
-    console.log(amount);
-    console.log(description);
-    console.log(category);
+
+  const [incomeList, setIncomeList] = React.useState([]); // Use state for expenseList
+  
+    React.useEffect(() => {
+      const fetchIncome = async () => {
+        const income = await getIncome();
+        setIncomeList(income);
+      };
+      fetchIncome();
+    }, []);
+
+  const addToDB = async () => {
+    try {
+      await addDoc(collection(db, "income"), {
+        amount: Number(amount),
+        description: description,
+        category: category,
+        date: currTime(),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+        const updatedIncome = await getIncome(); // Refresh the list after deletion
+        setIncomeList(updatedIncome);
+        console.log("Added to DB");
   };
   return (
     <div className="m-4 p-4 rounded-lg bg-gray-200">
