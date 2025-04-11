@@ -1,74 +1,141 @@
 import React from "react";
-import { db } from "../../config/firebase";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc } from "firebase/firestore";
+import { useAuth } from "../../context/AuthContext";
 import { currTime } from "../util/Time";
-import { getExpenses } from "../util/Utils";
 
 // handle the submission of expenses
 export default function ExpenseEntry() {
-  const [amount, setAmount] = React.useState(null);
+  const [amount, setAmount] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [category, setCategory] = React.useState("");
-  const [expenseList, setExpenseList] = React.useState([]); // Use state for expenseList
+  const [errors, setErrors] = React.useState({});
+  const { getUserCollection } = useAuth();
 
-  React.useEffect(() => {
-    const fetchExpenses = async () => {
-      const expenses = await getExpenses();
-      setExpenseList(expenses);
-    };
-    fetchExpenses();
-  }, []);
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!amount || amount <= 0) {
+      newErrors.amount = "Please enter a valid amount greater than 0";
+    }
+
+    if (!description.trim()) {
+      newErrors.description = "Please enter a description";
+    }
+
+    if (!category) {
+      newErrors.category = "Please select a category";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const addToDB = async () => {
+    if (!validateForm()) return;
+
     try {
-      await addDoc(collection(db, "expense"), {
+      const expenseCollection = getUserCollection("expense");
+      if (!expenseCollection) {
+        throw new Error("User not authenticated");
+      }
+
+      await addDoc(expenseCollection, {
         amount: Number(amount),
-        description: description,
+        description: description.trim(),
         category: category,
         date: currTime(),
       });
+      setAmount("");
+      setDescription("");
+      setCategory("");
+      setErrors({});
     } catch (err) {
       console.error(err);
     }
-    const updatedExpenses = await getExpenses(); // Refresh the list after deletion
-    setExpenseList(updatedExpenses);
-    console.log("Added to DB");
   };
-  return (
-    <div className="m-4 p-4 rounded-lg bg-gray-200">
-      <h1 className="text-xl">Expenses</h1>
-      {/* Amount */}
-      <input
-        className="m-2 p-2 rounded-lg"
-        type="number"
-        placeholder="Amount"
-        onChange={(e) => setAmount(e.target.value)}
-        required
-      />
-      {/* Description */}
-      <input
-        className="m-2 p-2 rounded-lg"
-        type="text"
-        placeholder="Description"
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      {/* Category Dropdown */}
-      <select
-        className="m-2 p-2 bg-blue-500 rounded-lg"
-        name="myDropdown"
-        placeholder="Category"
-        onChange={(e) => setCategory(e.target.value)}
-        required
-      >
-        <option defaultValue="">Select a Category</option>
-        <option value="option1">Option 1</option>
-        <option value="option2">Option 2</option>
-        <option value="option3">Option 3</option>
-      </select>
 
-      <button className="m-2 p-2 bg-teal-500 rounded-lg" onClick={addToDB}>
-        Add to finance
-      </button>
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold text-gray-800">Add Expense</h2>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Amount
+          </label>
+          <input
+            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              errors.amount ? "border-red-500" : "border-gray-300"
+            }`}
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Enter amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+          />
+          {errors.amount && (
+            <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <input
+            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              errors.description ? "border-red-500" : "border-gray-300"
+            }`}
+            type="text"
+            placeholder="Enter description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <select
+            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              errors.category ? "border-red-500" : "border-gray-300"
+            }`}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select a Category</option>
+            <option value="housing">Housing & Rent</option>
+            <option value="utilities">Utilities</option>
+            <option value="groceries">Groceries</option>
+            <option value="dining">Dining Out</option>
+            <option value="transportation">Transportation</option>
+            <option value="health">Health & Medical</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="shopping">Shopping</option>
+            <option value="education">Education</option>
+            <option value="personal_care">Personal Care</option>
+            <option value="travel">Travel</option>
+            <option value="subscriptions">Subscriptions</option>
+            <option value="debt">Debt Payments</option>
+            <option value="savings">Savings & Investments</option>
+            <option value="other">Other Expenses</option>
+          </select>
+          {errors.category && (
+            <p className="mt-1 text-sm text-red-600">{errors.category}</p>
+          )}
+        </div>
+        <button
+          className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          onClick={addToDB}
+        >
+          Add Expense
+        </button>
+      </div>
     </div>
   );
 }
