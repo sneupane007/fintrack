@@ -63,7 +63,7 @@ FinTrack is a comprehensive financial management application that helps users tr
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/fintrack.git
+   git clone https://github.com/sneupane007/fintrack.git
    cd fintrack
    ```
 
