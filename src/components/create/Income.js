@@ -1,133 +1,110 @@
-import React from "react";
-import { addDoc } from "firebase/firestore";
+import React, { useState } from "react";
+import { addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
-import { currTime } from "../util/Time";
 
 export default function Income() {
-  const [amount, setAmount] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [category, setCategory] = React.useState("");
-  const [errors, setErrors] = React.useState({});
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [error, setError] = useState("");
   const { getUserCollection } = useAuth();
 
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!amount || amount <= 0) {
-      newErrors.amount = "Please enter a valid amount greater than 0";
+    if (!amount || !description || !category || !date) {
+      setError("Please fill in all fields");
+      return false;
     }
-
-    if (!description.trim()) {
-      newErrors.description = "Please enter a description";
+    if (isNaN(amount) || parseFloat(amount) <= 0) {
+      setError("Please enter a valid amount");
+      return false;
     }
-
-    if (!category) {
-      newErrors.category = "Please select a category";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const addToDB = async () => {
+  const addToDB = async (e) => {
+    e.preventDefault();
     if (!validateForm()) return;
 
     try {
       const incomeCollection = getUserCollection("income");
       if (!incomeCollection) {
-        throw new Error("User not authenticated");
+        setError("Please sign in to add income");
+        return;
       }
 
       await addDoc(incomeCollection, {
-        amount: Number(amount),
-        description: description.trim(),
-        category: category,
-        date: currTime(),
+        amount: parseFloat(amount),
+        description,
+        category,
+        date: date,
+        createdAt: serverTimestamp(),
+        type: "income",
       });
+
+      // Reset form
       setAmount("");
       setDescription("");
       setCategory("");
-      setErrors({});
-    } catch (err) {
-      console.error(err);
+      setDate(new Date().toISOString().split("T")[0]);
+      setError("");
+    } catch (error) {
+      setError("Error adding income: " + error.message);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Add Income</h2>
-      <div className="space-y-4">
+    <div>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Add Income</h2>
+      <form onSubmit={addToDB} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Amount
-          </label>
           <input
-            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.amount ? "border-red-500" : "border-gray-300"
-            }`}
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <input
             type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="Enter amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            required
+            placeholder="Amount"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            step="0.01"
           />
-          {errors.amount && (
-            <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
-          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
           <input
-            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.description ? "border-red-500" : "border-gray-300"
-            }`}
             type="text"
-            placeholder="Enter description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            required
+            placeholder="Description"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Category
-          </label>
           <select
-            className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.category ? "border-red-500" : "border-gray-300"
-            }`}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            required
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select a Category</option>
-            <option value="salary">Salary/Paycheck</option>
-            <option value="freelance">Freelance Work</option>
-            <option value="investments">Investments & Capital Gains</option>
-            <option value="gifts">Gifts & Donations</option>
-            <option value="rental">Rental Income</option>
-            <option value="side_hustle">Side Hustle</option>
-            <option value="refunds">Refunds & Rebates</option>
-            <option value="other">Other Income</option>
+            <option value="">Select Category</option>
+            <option value="Salary">Salary</option>
+            <option value="Business">Business</option>
+            <option value="Investment">Investment</option>
+            <option value="Other">Other</option>
           </select>
-          {errors.category && (
-            <p className="mt-1 text-sm text-red-600">{errors.category}</p>
-          )}
         </div>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-          onClick={addToDB}
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Add Income
         </button>
-      </div>
+      </form>
     </div>
   );
 }

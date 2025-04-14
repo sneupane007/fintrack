@@ -3,13 +3,20 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const { signInWithGoogle, error } = useAuth();
+  const { signInWithGoogle, error, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      navigate("/");
+      // No need to navigate here as the useEffect will handle it
     } catch (error) {
       // Error is already handled in AuthContext
       console.error("Error signing in:", error);

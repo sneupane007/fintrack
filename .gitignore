@@ -23,3 +23,18 @@ yarn-debug.log*
 yarn-error.log*
 
 /src/config/
+
+users/
+  {userId}/
+    income/
+      {docId}/
+        amount: number
+        description: string
+        category: string
+        date: string (ISO)
+    expense/
+      {docId}/
+        amount: number
+        description: string
+        category: string
+        date: string (ISO)

@@ -6,34 +6,22 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import Expenses from "./components/create/Expenses";
 import Dashboard from "./components/dashboard/Dashboard";
 import Income from "./components/create/Income";
 import TransactionTable from "./components/read/TransactionTable";
-import Navigation from "./components/Navigation";
+import Navigation from "./components/navigation/Navigation";
 import CategoryVisualization from "./components/visualization/CategoryVisualization";
 import Login from "./components/auth/Login";
-
-// Protected Route component
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
-};
+import TransactionPieChart from "./components/visualization/TransactionPieChart";
+import CategoryLimits from "./components/settings/CategoryLimits";
+import FinancialReports from "./components/reports/FinancialReports";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function AppContent() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navigation />
@@ -44,34 +32,45 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <div className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Left Column - Dashboard */}
-                  <div className="lg:col-span-1">
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <Dashboard />
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Financial Overview (spans 2 columns) */}
+                  <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                    <Dashboard />
                   </div>
 
-                  {/* Right Column - Forms and Table */}
-                  <div className="lg:col-span-2 space-y-8">
-                    {/* Forms Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-white rounded-lg shadow-lg p-6">
+                  {/* Right Column - Income and Expense Forms */}
+                  <div className="lg:col-span-1">
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="bg-white rounded-lg shadow-lg p-4">
+                        <h2 className="text-lg font-semibold mb-3 text-blue-600 border-b pb-2">
+                          Add Income
+                        </h2>
                         <Income />
                       </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
+                      <div className="bg-white rounded-lg shadow-lg p-4">
+                        <h2 className="text-lg font-semibold mb-3 text-red-600 border-b pb-2">
+                          Add Expense
+                        </h2>
                         <Expenses />
                       </div>
                     </div>
-
-                    {/* Transactions Table */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                        Recent Transactions
-                      </h2>
-                      <TransactionTable />
-                    </div>
                   </div>
+                </div>
+
+                {/* Transactions Table - Full Width Below */}
+                <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                    Recent Transactions
+                  </h2>
+                  {!user ? (
+                    <div className="flex justify-center items-center h-64">
+                      <p className="text-gray-500">
+                        Please sign in to view your transactions
+                      </p>
+                    </div>
+                  ) : (
+                    <TransactionTable />
+                  )}
                 </div>
               </div>
             </ProtectedRoute>
@@ -87,6 +86,36 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/category-limits"
+          element={
+            <ProtectedRoute>
+              <div className="container mx-auto px-4 py-8">
+                <CategoryLimits />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/overview"
+          element={
+            <ProtectedRoute>
+              <div className="container mx-auto px-4 py-8">
+                <TransactionPieChart />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <div className="container mx-auto px-4 py-8">
+                <FinancialReports />
+              </div>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );
@@ -96,7 +125,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </AuthProvider>
     </Router>
   );

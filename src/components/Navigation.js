@@ -58,11 +58,16 @@ const Navigation = () => {
               <div className="flex items-center">
                 <img
                   className="h-8 w-8 rounded-full"
-                  src={user.photoURL}
-                  alt={user.displayName}
+                  src={
+                    user.photoURL ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user.displayName || "User"
+                    )}`
+                  }
+                  alt={user.displayName || "User"}
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700">
-                  {user.displayName}
+                  {user.displayName || user.email}
                 </span>
               </div>
               <button
