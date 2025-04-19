@@ -16,9 +16,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      // No need to navigate here as the useEffect will handle it
     } catch (error) {
-      // Error is already handled in AuthContext
       console.error("Error signing in:", error);
     }
   };

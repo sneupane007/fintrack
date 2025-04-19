@@ -2,7 +2,6 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Chart } from "chart.js/auto";
 
-// Helper function to format currency
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -10,12 +9,10 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-// Get month name
 const getMonthName = (date) => {
   return new Date(date).toLocaleString("default", { month: "long" });
 };
 
-// Generate PDF report
 export const generateFinancialReport = async (data) => {
   const {
     incomeData,

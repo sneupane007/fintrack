@@ -2,7 +2,7 @@
 
 FinTrack is a comprehensive financial management application that helps users track income and expenses, manage budget limits, visualize spending patterns, and generate detailed financial reports.
 
-![FinTrack Dashboard](https://via.placeholder.com/800x400?text=FinTrack+Dashboard)
+![FinTrack Dashboard]()
 
 ## Features
 
